@@ -13,71 +13,44 @@ import cz.cuni.mff.d3s.deeco.knowledge.OutWrapper;
 
 public class FollowerEnvEnsembleACC extends Ensemble {
 
-@Membership
-public static boolean membership(
-		@In("coord.followerGas") Double fGas,
-		@In("coord.followerBrake") Double fBrake,
-		@In("coord.lastTime") Double fLastTime,
-		@In("coord.initTime") Double fInitTime,
+	@Membership
+	public static boolean membership(
+			@In("coord.currentFPos") Double currentFPos,
+			@In("coord.currentFSpeed") Double currentFSpeed,
+			@In("coord.fCreationTime") Double fCreationTime,
+			@In("coord.followerGas") Double followerGas,
+			@In("coord.followerBrake") Double followerBrake,
 		
-		@In("member.fAcceleration") Double eFAcceleration,
-		@In("member.lastTime") Double eLastTime,
-		@In("member.timePeriod") Double eTimePeriod,
-		@In("member.initTime") Double eInitTime,
-		
-		@In("member.eFollowerGas") Double ensFGas,
-		@In("member.eFollowerBrake") Double ensFbrake,
-		@In("member.efCreationTime") Double eFCreationTime,
-		@In("member.eFInitTime") Double eFInitTime,
-		
-		@In("coord.fAcc") Double fAcc,
-		@In("coord.fCreationTime") Double fCreationTime,
-		@In("coord.eTimePeriod") Double fETimePeriod,
-		@In("coord.eInitTime") Double fEInitTime		
-		){
+			@In("member.eFollowerGas") Double eFollowerGas,
+			@In("member.eFollowerBrake") Double eFollowerBrake,
+			@In("member.eFPos") Double eFPos,
+			@In("member.eFollowerSpeed") Double eFollowerSpeed,
+			@In("member.eLastTime") Double eLastTime
+			){
+			return true;
+	}
 	
-		return true;
-}
-
-@KnowledgeExchange
-@PeriodicScheduling(200)
-public static void map(
-	@In("coord.followerGas") Double fGas,
-	@In("coord.followerBrake") Double fBrake,
-	@In("coord.lastTime") Double fLastTime,
-	@In("coord.initTime") Double fInitTime,
+	@KnowledgeExchange
+	@PeriodicScheduling(50)
+	public static void map(
+		@Out("coord.currentFPos") OutWrapper<Double> currentFPos,
+		@Out("coord.currentFSpeed") OutWrapper<Double> currentFSpeed,
+		@Out("coord.fCreationTime") OutWrapper<Double> fCreationTime,
+		@In("coord.followerGas") Double followerGas,
+		@In("coord.followerBrake") Double followerBrake,
 	
-	@In("member.fPos") Double eFPos,
-	@In("member.eFollowerSpeed") Double eFollowerSpeed,
-	@In("member.fAcceleration") Double eFAcceleration,
-	@In("member.lastTime") Double eLastTime,
-	@In("member.timePeriod") Double eTimePeriod,
-	@In("member.initTime") Double eInitTime,
+		@Out("member.eFollowerGas") OutWrapper<Double> eFollowerGas,
+		@Out("member.eFollowerBrake") OutWrapper<Double> eFollowerBrake,
+		@In("member.eFPos") Double eFPos,
+		@In("member.eFollowerSpeed") Double eFollowerSpeed,
+		@In("member.eLastTime") Double eLastTime
 	
-	@Out("member.eFollowerGas") OutWrapper<Double> ensFGas,
-	@Out("member.eFollowerBrake") OutWrapper<Double> ensFbrake,
-	@Out("member.efCreationTime") OutWrapper<Double> eFCreationTime,
-	@Out("member.eFInitTime") OutWrapper<Double> eFInitTime,
+	) {
 	
-	@Out("coord.currentFPos") OutWrapper<Double> fCurrentFPos,
-	@Out("coord.currentFSpeed") OutWrapper<Double> fCurrentFSpeed,
-	@Out("coord.fAcc") OutWrapper<Double> fAcc,
-	@Out("coord.fCreationTime") OutWrapper<Double> fCreationTime,
-	@Out("coord.eTimePeriod") OutWrapper<Double> fETimePeriod,
-	@Out("coord.eInitTime") OutWrapper<Double> fEInitTime
-) {
-
-	ensFGas.value = fGas;
-	ensFbrake.value = fBrake;
-	eFCreationTime.value = fLastTime;
-	eFInitTime.value = fInitTime;
-	
-	fCurrentFPos.value = eFPos;
-	fCurrentFSpeed.value = eFollowerSpeed;
-	fAcc.value = eFAcceleration;
-	fCreationTime.value = eLastTime;
-	fETimePeriod.value = eTimePeriod;
-	fEInitTime.value = eInitTime;
-	
-}
+		eFollowerGas.value = followerGas;
+		eFollowerBrake.value = followerBrake;
+		currentFPos.value = eFPos;
+		currentFSpeed.value = eFollowerSpeed;
+		fCreationTime.value = eLastTime;
+	}
 }

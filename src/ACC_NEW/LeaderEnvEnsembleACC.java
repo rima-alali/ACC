@@ -16,67 +16,40 @@ public class LeaderEnvEnsembleACC extends Ensemble {
 public static boolean membership(
 		@In("coord.leaderGas") Double lGas,
 		@In("coord.leaderBrake") Double lBrake,
-		@In("coord.lAcc") Double lAcc,
-		@In("coord.lMinAcc") Double lMinAcc,
-		@In("coord.lMaxAcc") Double lMaxAcc,
+		@In("coord.lPos") Double lPos,
+		@In("coord.lSpeed") Double lSpeed,
+		@In("coord.creationTime") Double creationTime,
 		
-		@In("member.lAcceleration") Double eLAcceleration,
-		@In("member.lMinAcc") Double eLMinAcc,
-		@In("member.lMaxAcc") Double eLMaxAcc,
-		@In("member.eLeaderGas") Double eLGas,
-		@In("member.eLeaderBrake") Double eLBrake
+		@In("member.eLeaderGas") Double eLeaderGas,
+		@In("member.eLeaderBrake") Double eLeaderBrake,
+		@In("member.eLPos") Double eLPos,
+		@In("member.eLeaderSpeed") Double eLeaderSpeed,
+		@In("member.eLastTime") Double eLastTime
 	){
 	return true;
 	}
 
 @KnowledgeExchange
-@PeriodicScheduling(200)
+@PeriodicScheduling(50)
 public static void map(
 		@In("coord.leaderGas") Double lGas,
 		@In("coord.leaderBrake") Double lBrake,
-		@In("coord.lastTime") Double lLTime,
-		@In("coord.initTime") Double lInitTime,
-		
-		@In("member.lPos") Double eLPos,
-		@In("member.eLeaderSpeed") Double eLeaderSpeed,
-		@In("member.lAcceleration") Double eLAcceleration,
-		@In("member.lMinAcc") Double eLMinAcc,
-		@In("member.lMaxAcc") Double eLMaxAcc,
-		@In("member.timePeriod") Double eTimePeriod,
-		@In("member.lastTime") Double eTime,
-		@In("member.initTime") Double eInitTime,
-		
-		
-		@Out("member.eLeaderGas") OutWrapper<Double> eLGas,
-		@Out("member.eLeaderBrake") OutWrapper<Double> eLBrake,
-		@Out("member.elCreationTime") OutWrapper<Double> eLCreationTime,
-		@Out("member.eLInitTime") OutWrapper<Double> eLInitTime,
-
 		@Out("coord.lPos") OutWrapper<Double> lPos,
 		@Out("coord.lSpeed") OutWrapper<Double> lSpeed,
-		@Out("coord.lAcc") OutWrapper<Double> lAcc,
-		@Out("coord.lMinAcc") OutWrapper<Double> lMinAcc,
-		@Out("coord.lMaxAcc") OutWrapper<Double> lMaxAcc,
-		@Out("coord.eTimePeriod") OutWrapper<Double> lETimePeriod,
-		@Out("coord.creationTime") OutWrapper<Double> lCreationTime,
-		@Out("coord.eInitTime") OutWrapper<Double> lEInitTime
+		@Out("coord.creationTime") OutWrapper<Double> creationTime,
 		
+		@Out("member.eLeaderGas") OutWrapper<Double> eLeaderGas,
+		@Out("member.eLeaderBrake") OutWrapper<Double> eLeaderBrake,
+		@In("member.eLPos") Double eLPos,
+		@In("member.eLeaderSpeed") Double eLeaderSpeed,
+		@In("member.eLastTime") Double eLastTime
 	) {
-	
-	eLGas.value = lGas;
-	eLBrake.value = lBrake;
-	eLCreationTime.value = lLTime;
-	eLInitTime.value = lInitTime;
-	
+
+	eLeaderGas.value = lGas;
+	eLeaderBrake.value = lBrake;
 	lPos.value = eLPos;
 	lSpeed.value = eLeaderSpeed;
-	lAcc.value = eLAcceleration;
-	lMinAcc.value = eLMinAcc;
-	lMaxAcc.value = eLMaxAcc;
-	lETimePeriod.value = eTimePeriod;
-	lCreationTime.value = eTime;
-	lEInitTime.value = eInitTime;
-	
+	creationTime.value = eLastTime;
 }
 
 }
