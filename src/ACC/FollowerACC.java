@@ -1,5 +1,8 @@
-package ACC;
+package ACC_NEW;
 
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import cz.cuni.mff.d3s.deeco.annotations.In;
 import cz.cuni.mff.d3s.deeco.annotations.InOut;
@@ -11,149 +14,144 @@ import cz.cuni.mff.d3s.deeco.knowledge.OutWrapper;
 
 public class FollowerACC extends Component {
 
-	public String name;
-	public Double followerGas = 0.0 ;
-	public Double followerBrake = 0.0;
+public String name;
+public Double currentFPos = 0.0;      
+public Double currentFSpeed = 0.0;    
+public Double fCreationTime = 0.0;    
+public Double followerGas = 0.0 ;
+public Double followerBrake = 0.0;
+public Double fLastTime = 0.0;
 
-	public Double currentFPos = 0.0;//from env.
-	public Double fSpeed = 0.0;//from env.
-	public Double currentFAcc = 0.0;
-	public Double fCreationTime = 0.0;//from env.
-	public Double currentLPos = 0.0;//from the leader - should not know about the leader position at the first 60.0
-	public Double leaderSpeed = 0.0;
-	public Double currentLAcc = 0.0;//from the leader
-	public Double lCreationTime = 0.0;
-	
-	public Double lastTime = 0.0;
-	public Double timePeriod = 0.0;
-	public Double initTime = 0.0;
-	public Double integratorError = 0.0;
-	public Double es = 0.0;
-	
-	public Double minLPos = 60.0;//calculated
-	public Double maxLPos = 60.0;//calculated
-	public Double minLSpeed = 0.0;//calculated
-	public Double maxLSpeed = 0.0;//calculated
-	public Double minLAcc = 0.0;//torque - leader
-	public Double maxLAcc = 0.0;//torque - leader
-	public Double lTimePeriod = 0.0;//leader from ensemble to calculate min/maxLSpeed and min/maxLPos
-	
-	protected static final double kpD = 0.193;
-	protected static final double kp = 0.12631;
-	protected static final double ki = 0.001;
-	protected static final double kd = 0;
-	protected static final double kt = 0.01;
-	protected static final double secNanoSecFactor = 1000000000;
-	
-	
-	public FollowerACC() {
-		name = "F";
-		initTime = System.nanoTime()/secNanoSecFactor;
-	}
-	
-	
-	@Process
-	@PeriodicScheduling(100)
-	public static void speedControl(
-			@In("fSpeed") Double currentFSpeed,
-			@In("leaderSpeed") Double currentLSpeed,
-			@In("initTime") Double initTime,
-			@In("fCreationTime") Double creationTime,
+public Double currentLPos = 60.0;       
+public Double currentLSpeed = 0.0;  
+public Double minLPos = 60.0;       
+public Double minLSpeed = 0.0;     
+public Double minLAcc = 0.0;     
+public Double maxLPos = 60.0;       
+public Double maxLSpeed = 0.0;     
+public Double maxLAcc = 0.0;     
+public Double lCreationTime = 0.0;	  
+
+public Double integratorError = 0.0;
+public Double es = 0.0;
+
+
+protected static final double kpD = 0.193;
+protected static final double kp = 0.12631;
+protected static final double ki = 0.001;
+protected static final double kd = 0;
+protected static final double kt = 0.01;
+protected static final double secNanoSecFactor = 1000000000;
+
+
+public FollowerACC() {
+	name = "F";
+}
+
+
+@Process
+@PeriodicScheduling(100)
+public static void speedControl(
+
+			@In("currentFPos") Double currentFPos,
+			@In("currentFSpeed") Double currentFSpeed,
+			@In("fCreationTime") Double fCreationTime,
+			@In("currentLPos") Double currentLPos,
+			@In("currentLSpeed") Double currentLSpeed,
 			@In("lCreationTime") Double lCreationTime,
-			@In("lTimePeriod") Double lTimePeriod,
-			@Out("followerGas") OutWrapper<Double> fGas,
-			@Out("followerBrake") OutWrapper<Double> fBrake,
-			@InOut("lastTime") OutWrapper<Double> lastTime,
-			@InOut("timePeriod") OutWrapper<Double> timePeriod,
-			@InOut("integratorError") OutWrapper<Double> integratorError,
-			@InOut("es") OutWrapper<Double> es,			
-			@InOut("currentFPos") OutWrapper<Double> currentFPos,
-			@InOut("currentLPos") OutWrapper<Double> currentLPos,
-
-			@InOut("minLPos") OutWrapper<Double> minLPos,
-			@InOut("maxLPos") OutWrapper<Double> maxLPos,
-			@InOut("minLSpeed") OutWrapper<Double> minLSpeed,
-			@InOut("maxLSpeed") OutWrapper<Double> maxLSpeed,
-			@InOut("minLAcc") OutWrapper<Double> minLAcc,
-			@InOut("maxLAcc") OutWrapper<Double> maxLAcc
-			) {
-		
-		timePeriod.value = 0.1;//((System.nanoTime()/secNanoSecFactor) - initTime) -lastTime.value;//system time
-		
-//		Double[] valuesBoundries= {0.0,0.0,0.0,0.0,0.0,0.0};
-//		valuesBoundries[0] = minLPos.value;
-//		valuesBoundries[1] = maxLPos.value;
-//		valuesBoundries[2] = minLSpeed.value;
-//		valuesBoundries[3] = maxLSpeed.value;
-//		valuesBoundries[4] = minLAcc.value;
-//		valuesBoundries[5] = maxLAcc.value;
-//
-//		Double[] newVals = boundries(valuesBoundries);
-//		minLPos.value += newVals[0]*lTimePeriod;     //minPos += minSpeed*lTimePeriod;
-//		maxLPos.value += newVals[1]*lTimePeriod;     //maxPos += maxSpeed*lTimePeriod;
-//		minLSpeed.value += newVals[2]*lTimePeriod;   //minSpeed += minAcc*lTimePeriod;
-//		maxLSpeed.value += newVals[3]*lTimePeriod;   //maxSpeed += maxAcc*lTimePeriod;
-//		
-//		Double b=checkSafety(valuesBoundries, currentFPos.value);//the difference with the min bound
-//		System.out.println("minLPos :"+minLPos.value+"  maxPos : "+maxLPos.value+"  b: "+b);
-//		if(b == 1.0){
-//			fGas.value = 0.0;
-//			fBrake.value = b;
-//
-//		}else{
-
-			double distanceError = - 50 + (currentLPos.value - currentFPos.value); 
-			double pidD = kpD * distanceError;
-			double error = pidD + currentLSpeed - currentFSpeed; 
-			integratorError.value += (ki * error + kt * es.value) * timePeriod.value; 
-			double pid = kp * error + integratorError.value;
-			es.value = saturate(pid) - pid;
-			pid = saturate(pid);
 			
-			if(pid >= 0){
-				fGas.value = pid;
-				fBrake.value = 0.0;
+			@Out("followerGas") OutWrapper<Double> followerGas,
+			@Out("followerBrake") OutWrapper<Double> followerBrake,
+			
+			@InOut("minLPos") OutWrapper<Double> minLPos,
+			@InOut("minLSpeed") OutWrapper<Double> minLSpeed,
+			@InOut("minLAcc") OutWrapper<Double> minLAcc,
+			@InOut("maxLPos") OutWrapper<Double> maxLPos,
+			@InOut("maxLSpeed") OutWrapper<Double> maxLSpeed,
+			@InOut("maxLAcc") OutWrapper<Double> maxLAcc,
+			@InOut("fLastTime") OutWrapper<Double> fLastTime,
+			@InOut("integratorError") OutWrapper<Double> integratorError,
+			@InOut("es") OutWrapper<Double> es
+		) {
+	
+		double currentTime = System.nanoTime()/secNanoSecFactor;
+		double fTimePeriod = fCreationTime > 0.0? currentTime - fCreationTime : 0.0; 
+		double lTimePeriod = 0.0;
+		HashMap<String, Double> boundaries = new HashMap<String, Double>();
+
+		if( lCreationTime < fLastTime.value ){
+			lTimePeriod = fLastTime.value > 0.0 ? currentTime - fLastTime.value : 0.0;
+			boundaries = calculateBoundaries(minLSpeed.value, maxLSpeed.value, minLPos.value, maxLPos.value, lTimePeriod);
+			minLPos.value += boundaries.get("minLPos");
+			maxLPos.value += boundaries.get("maxLPos");
+			minLSpeed.value += boundaries.get("minLSpeed");
+			maxLSpeed.value += boundaries.get("maxLSpeed");
+			System.out.println("////... pos: min "+minLPos.value+" ... max "+maxLPos.value + "     time :"+currentTime);
+			System.out.println("////... speed: min "+minLSpeed.value+" ... max "+maxLSpeed.value);
+			System.out.println("////... acc : min "+minLAcc+" ... max "+maxLAcc);
+		
+		}else { 
+			lTimePeriod = lCreationTime > 0.0 ? currentTime - lCreationTime : 0.0;
+			boundaries = calculateBoundaries(currentLSpeed, currentLSpeed, currentLPos, currentLPos, lTimePeriod);
+			minLPos.value = currentLPos + boundaries.get("minLPos");
+			maxLPos.value = currentLPos + boundaries.get("maxLPos");
+			minLSpeed.value = currentLSpeed + boundaries.get("minLSpeed");
+			maxLSpeed.value = currentLSpeed + boundaries.get("maxLSpeed");
+			System.out.println("\\\\... pos: min "+minLPos.value+" ... max "+maxLPos.value+"      time :"+currentTime);
+			System.out.println("\\\\... speed: min "+minLSpeed.value+" ... max "+maxLSpeed.value);
+			System.out.println("\\\\... acc : min "+minLAcc+" ... max "+maxLAcc);
+		}
+		
+			double distanceError = - 50 + (currentLPos - currentFPos);
+			double pidDistance = kpD * distanceError;
+			double error = pidDistance + currentLSpeed - currentFSpeed;
+			integratorError.value += (ki * error + kt * es.value) * fTimePeriod;
+			double pidSpeed = kp * error + integratorError.value;
+			es.value = saturate(pidSpeed) - pidSpeed;
+			pidSpeed = saturate(pidSpeed);
+		
+
+			if(pidSpeed >= 0){
+				followerGas.value = pidSpeed;
+				followerBrake.value = 0.0;
 			}else{
-				fGas.value = 0.0;
-				fBrake.value = -pid;
+				followerGas.value = 0.0;
+				followerBrake.value = -pidSpeed;
 			}
 			
-//		}
-		
-		lastTime.value += timePeriod.value;
-//		System.out.println("#####  Follower last time :"+lastTime.value+" the creation :"+creationTime+"  the oldness follower: "+(lastTime.value-creationTime));
-//		System.out.println("                                              the leader creation:"+lCreationTime+"  the oldness :"+(lastTime.value-lCreationTime));
-		
+			fLastTime.value = currentTime;
+			
+			
+			if((minLPos.value - currentFPos) <= 40){
+				System.err.println("brake   -  minLPos :"+minLPos.value+"  maxPos:"+maxLPos.value+" ,  currentFPos :"+currentFPos+
+						"   creationTime: "+lCreationTime+"   currentTime: "+currentTime+"  flastTime: "+fLastTime.value);
+			}
 	}
-	
-	
+
+
 	private static double saturate(double pid) {
 		if(pid > 1) pid = 1;
 		else if(pid < -1) pid = -1;
 		return pid;
 	}
 	
-	private static Double checkSafety(Double[] valuesBoundries,Double fPos){
-
-		if((fPos > (valuesBoundries[0] - 40) )){
-			return 1.0;
-		}
+	private static Double checkSafety(Double wcLPos, Double fPos){
+		if( (fPos - wcLPos) <= 40 ) return 1.0;
 		return 0.0;
 	}
 	
-	private static Double[] boundries(Double[] valuesBoundries){
-		Double[] v={0.0,0.0,0.0,0.0};
-		v[0] = valuesBoundries[2]; //d/dt (minLPos) = minSpeed 
-		v[1] = valuesBoundries[3]; //d/dt (maxLPos) = maxLSpeed
-		v[2] = valuesBoundries[4]; //d/dt (minLSpeed) = minLAcc
-		v[3] = valuesBoundries[5]; //d/dt (maxLSpeed) = maxLAcc
-		return v;
+	private static HashMap<String, Double> calculateBoundaries( Double minLSpeed, Double maxLSpeed, Double minLPos, Double maxLPos, Double dt){
+			double minLAcc = ACCDatabase.getAcceleration(minLSpeed, minLPos, ACCDatabase.lTorques, 0.0, 1.0);
+			double maxLAcc = ACCDatabase.getAcceleration(maxLSpeed, maxLPos, ACCDatabase.lTorques, 1.0, 0.0);
+			minLSpeed = minLAcc * dt;
+			maxLSpeed = maxLAcc * dt;
+			minLPos = minLSpeed * dt;
+			maxLPos = maxLSpeed * dt;
+			HashMap<String, Double> val=new HashMap<String, Double>();
+			val.put("minLPos", minLPos);
+			val.put("maxLPos", maxLPos);
+			val.put("minLSpeed", minLSpeed);
+			val.put("maxLSpeed", maxLSpeed);
+			return val;
 	}
-	
-//	private static Double[] estimation(Double pos,Double speed,Double acc, Double dt){
-//		Double[] values = null;
-//		values[0] = pos + speed*dt + acc*dt*dt/2; // new pos
-//		values[1] = speed + acc*dt; // new speed
-//		return values;
-//	}
 }

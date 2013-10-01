@@ -1,4 +1,4 @@
-package ACC;
+package ACC_NEW;
 
 
 import cz.cuni.mff.d3s.deeco.annotations.KnowledgeExchange;
@@ -15,40 +15,42 @@ public class FollowerEnvEnsembleACC extends Ensemble {
 
 	@Membership
 	public static boolean membership(
-			@In("coord.name") String cName,
-			@In("coord.fSpeed") Double fSpeed,
+			@In("coord.currentFPos") Double currentFPos,
+			@In("coord.currentFSpeed") Double currentFSpeed,
+			@In("coord.fCreationTime") Double fCreationTime,
 			@In("coord.followerGas") Double followerGas,
 			@In("coord.followerBrake") Double followerBrake,
-			@In("member.name") String mName,
-			@In("member.lastTime") Double eTime,
+		
 			@In("member.eFollowerGas") Double eFollowerGas,
 			@In("member.eFollowerBrake") Double eFollowerBrake,
-			@In("member.eFollowerSpeed") Double eFollowerSpeed
+			@In("member.eFPos") Double eFPos,
+			@In("member.eFollowerSpeed") Double eFollowerSpeed,
+			@In("member.eLastTime") Double eLastTime
 			){
-		return true;
+			return true;
 	}
-
+	
 	@KnowledgeExchange
 	@PeriodicScheduling(50)
 	public static void map(
-			@In("coord.followerGas") Double fGas,
-			@In("coord.followerBrake") Double fBrake,
-			@In("member.eFollowerSpeed") Double eFSpeed,
-			@In("member.lastTime") Double eTime,
-			@In("coord.lastTime") Double fLastTime,
-			@Out("member.eFollowerGas") OutWrapper<Double> ensFGas,
-			@Out("member.eFollowerBrake") OutWrapper<Double> ensFbrake,
-			@Out("coord.fSpeed") OutWrapper<Double> speed,
-			@Out("member.efCreationTime") OutWrapper<Double> eFTime,
-			@Out("coord.fCreationTime") OutWrapper<Double> time
-		) {
+		@Out("coord.currentFPos") OutWrapper<Double> currentFPos,
+		@Out("coord.currentFSpeed") OutWrapper<Double> currentFSpeed,
+		@Out("coord.fCreationTime") OutWrapper<Double> fCreationTime,
+		@In("coord.followerGas") Double followerGas,
+		@In("coord.followerBrake") Double followerBrake,
 	
-		ensFGas.value=fGas;
-		ensFbrake.value=fBrake;
-		speed.value = eFSpeed;
-		eFTime.value = fLastTime;
-		time.value = eTime;
-
+		@Out("member.eFollowerGas") OutWrapper<Double> eFollowerGas,
+		@Out("member.eFollowerBrake") OutWrapper<Double> eFollowerBrake,
+		@In("member.eFPos") Double eFPos,
+		@In("member.eFollowerSpeed") Double eFollowerSpeed,
+		@In("member.eLastTime") Double eLastTime
+	
+	) {
+	
+		eFollowerGas.value = followerGas;
+		eFollowerBrake.value = followerBrake;
+		currentFPos.value = eFPos;
+		currentFSpeed.value = eFollowerSpeed;
+		fCreationTime.value = eLastTime;
 	}
 }
-
